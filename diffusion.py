@@ -3,6 +3,29 @@ import numpy as np
 import matplotlib.pyplot as plt
 import csv
 
+# to compare the calculation result with data calculated by the co-researcher
+def compare(m, u):
+    if m == 0:
+        name = './data/dif_Div50_000.0000.csv'
+    if m == 50000:
+        name = './data/dif_Div50_005.0000.csv'
+    elif m == 100000:
+        name = './data/dif_Div50_010.0000.csv'
+    elif m == 150000:
+        name = './data/dif_Div50_015.0000.csv'
+    elif m == 200000:
+        name = './data/dif_Div50_020.0000.csv'
+    elif m == 250000:
+        name = './data/dif_Div50_025.0000.csv'
+    with open(name, 'r') as f:
+        reader = csv.reader(f)
+        sim_data = []
+        for row in reader:
+            sim_data.append(np.array(row, dtype=np.float))
+        sim_data = np.array(sim_data)
+        sim_data = sim_data[::-1]
+        print(sum(sum(abs(sim_data - u))))
+
 if __name__ == "__main__":
     w = h = 50.
     # intervals in x-, y- directions, mm
@@ -70,9 +93,9 @@ if __name__ == "__main__":
         return u0, u
 
     # Number of timesteps
-    nsteps = 150001
+    nsteps = 250001
     # Output 4 figures at these timesteps
-    mfig = [0, 50000, 100000, 150000]
+    mfig = [0, 100000, 200000, 250000]
     fignum = 0
     fig = plt.figure()
     for m in range(nsteps):
@@ -86,6 +109,9 @@ if __name__ == "__main__":
             with open(str(m) + '.csv', 'w') as f:
                 writer = csv.writer(f, lineterminator='\n')
                 writer.writerows(u.tolist())
+
+            compare(m, u)
+
         u0, u = do_timestep(u0, u)
     fig.subplots_adjust(right=0.85)
     cbar_ax = fig.add_axes([0.9, 0.15, 0.03, 0.7])
