@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 import matplotlib.pyplot as plt
+import csv
 
 if __name__ == "__main__":
     w = h = 50.
@@ -74,7 +75,6 @@ if __name__ == "__main__":
     fignum = 0
     fig = plt.figure()
     for m in range(nsteps):
-        u0, u = do_timestep(u0, u)
         if m in mfig:
             fignum += 1
             print(m, fignum)
@@ -82,6 +82,10 @@ if __name__ == "__main__":
             im = ax.imshow(u.copy(), cmap=plt.get_cmap('hot'), vmin=Tcool,vmax=1)
             ax.set_axis_off()
             ax.set_title('{:.1f} ms'.format(m*dt*1000))
+            with open(str(m) + '.csv', 'w') as f:
+                writer = csv.writer(f, lineterminator='\n')
+                writer.writerows(u.tolist())
+        u0, u = do_timestep(u0, u)
     fig.subplots_adjust(right=0.85)
     cbar_ax = fig.add_axes([0.9, 0.15, 0.03, 0.7])
     cbar_ax.set_xlabel('$T$ / K', labelpad=20)
