@@ -2,6 +2,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import csv
+import json
 
 # to compare the calculation result with data calculated by the co-researcher
 def compare(m, u):
@@ -109,7 +110,13 @@ if __name__ == "__main__":
     mfig = [0, 100000, 200000, 300000]
     fignum = 0
     fig = plt.figure()
+
+    all_time_series = []
     for m in range(nsteps):
+        if m % 1000 == 0:
+            u1d = u.flatten()   # serialize two dimensional data to one dimension
+            all_time_series.append(u1d)
+
         if m in mfig:
             fignum += 1
             print(m, fignum)
@@ -117,9 +124,9 @@ if __name__ == "__main__":
             im = ax.imshow(u.copy(), cmap=plt.get_cmap('hot'), vmin=Tcool,vmax=1)
             ax.set_axis_off()
             ax.set_title('{:.1f} ms'.format(m*dt*1000))
-            with open(str(m) + '.csv', 'w') as f:
-                writer = csv.writer(f, lineterminator='\n')
-                writer.writerows(u.tolist())
+            # with open(str(m) + '.csv', 'w') as f:
+            #     writer = csv.writer(f, lineterminator='\n')
+            #     writer.writerows(u.tolist())
 
             compare(m, u)
 
@@ -129,3 +136,15 @@ if __name__ == "__main__":
     cbar_ax.set_xlabel('$T$ / K', labelpad=20)
     fig.colorbar(im, cax=cbar_ax)
     plt.show()
+
+    all_time_series = np.array(all_time_series)
+    all_time_series = all_time_series.transpose()
+    # print(all_time_series.shape) = (2500, 301)
+
+    saveJSON = {
+        'allTimeSeries': all_time_series.tolist(), # reverse interpolate_list
+        'width': w
+    }
+    f = open("./data/NagumoSimulation.json", "w")
+    json.dump(saveJSON, f)
+    f.close()
