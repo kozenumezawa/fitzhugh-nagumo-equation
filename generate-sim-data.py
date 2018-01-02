@@ -94,7 +94,7 @@ if __name__ == "__main__":
             return u0, u
 
         # Number of timesteps
-        nsteps = 300001
+        nsteps = 400001
         all_time_series = []
         for m in range(nsteps):
             if m % 100000 == 0:
