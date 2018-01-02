@@ -205,7 +205,7 @@ if __name__ == "__main__":
     window_size = 3
     sampled_all_time_series, sampled_coords = removeUselessTimeSeries(all_time_series_noise, width)
 
-    corr_matrix, lag_matrix = allcrosscorr.calc_all(sampled_all_time_series,  max_lag, lag_step, window_size)
+    corr_matrix, lag_matrix = allcrosscorr.calc_all(sampled_all_time_series, max_lag, lag_step, window_size)
     # f = open("./expdata/corr_list-" + str(window_size) + ".json", "r")
     # corr_matrix = json.load(f)
     # f = open("./expdata/lag_list-" + str(window_size) + ".json", "r")
@@ -219,6 +219,8 @@ if __name__ == "__main__":
     json_data = irm.infinite_relational_model(corr_matrix, lag_matrix, threshold, sampled_coords, window_size)
 
     # sort
+    corr_matrix = np.array(json_data['corrMatrix'])
+    lag_matrix = np.array(json_data['lagMatrix'])
     cluster_matrix = np.array(json_data['clusterMatrix'])
     cluster_sampled_coords = np.array(json_data['clusterSampledCoords'])
     n_cluster_list = np.array(json_data['nClusterList'])
@@ -242,6 +244,7 @@ if __name__ == "__main__":
 
         'sampledAllTimeSeries': sampled_all_time_series.tolist(),
         'sampledCoords': sampled_coords,
+
         'corrMatrix': sort_result['corrMatrix'],
         'lagMatrix': sort_result['lagMatrix'],
         'clusterMatrix': sort_result['clusterMatrix'],
