@@ -131,11 +131,11 @@ if __name__ == "__main__":
             compare(m, u)
 
         u0, u = do_timestep(u0, u)
-    fig.subplots_adjust(right=0.85)
-    cbar_ax = fig.add_axes([0.9, 0.15, 0.03, 0.7])
-    cbar_ax.set_xlabel('$T$ / K', labelpad=20)
-    fig.colorbar(im, cax=cbar_ax)
-    plt.show()
+    # fig.subplots_adjust(right=0.85)
+    # cbar_ax = fig.add_axes([0.9, 0.15, 0.03, 0.7])
+    # cbar_ax.set_xlabel('$T$ / K', labelpad=20)
+    # fig.colorbar(im, cax=cbar_ax)
+    # plt.show()
 
     all_time_series = np.array(all_time_series)
     all_time_series = all_time_series.transpose()
