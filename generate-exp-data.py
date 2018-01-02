@@ -187,11 +187,13 @@ if __name__ == "__main__":
     # substitute
     all_time_series = all_time_series_list[1]
     for (low_point, high_point) in zip(low_points, high_points):
-        low_idx = int(low_point['y'] * width + low_point['x'])
-        all_time_series[low_idx: low_idx + 3, :] = all_time_series_list[0][low_idx: low_idx + 3, :]
+        low_indices = [int(low_point['y'] * width + low_point['x']), int((low_point['y'] + 1) * width + low_point['x']), int((low_point['y'] + 2) * width + low_point['x'])]
+        for low_idx in low_indices:
+            all_time_series[low_idx: low_idx + 3, :] = all_time_series_list[0][low_idx: low_idx + 3, :]
 
-        high_idx = int(high_point['y'] * width + high_point['x'])
-        all_time_series[high_idx: high_idx + 3, :] = all_time_series_list[2][high_idx: high_idx + 3, :]
+        high_indices = [int(high_point['y'] * width + high_point['x']), int((high_point['y'] + 1) * width + high_point['x']), int((high_point['y'] + 2) * width + high_point['x'])]
+        for high_idx in high_indices:
+            all_time_series[high_idx: high_idx + 3, :] = all_time_series_list[2][high_idx: high_idx + 3, :]
 
     # step3: add noise
     noise = 0
