@@ -31,7 +31,7 @@ if __name__ == "__main__":
 
     # step1: generate multiple data when alpha is changed
     D = 20
-    alpha_list = [0.08, 0.09, 0.1]
+    alpha_list = [0.085, 0.09, 0.095]
     for alpha in alpha_list:
         u0 = Tcool * np.ones((ny, nx)) # shape of u = u[y][x]
         u = u0

@@ -16,11 +16,13 @@ import json
 from causalinference import allcrosscorr
 from clustering import irm
 
+window_size = 3
+
 def randomSampling():
     while True:
         idx = np.random.randint(0, 47)
-        # the cause of (idx % 3 == 0) is calculation of substituting
-        if idx % 3 == 0:
+        # the cause of (idx % window_size == 0) is calculation of substituting
+        if idx % window_size == 0:
             return idx
 
 def getCoordsList(n):
@@ -41,9 +43,39 @@ def add_noise(all_time_series, magnitude):
     return all_time_series_noise
 
 def isSamplingPoint(idx):
-    if int(idx % 3) == 1:
+    if int(idx % window_size) == 1:
         return True
     return False
+
+def applyMeanFilter(all_time_series, width):
+    mean_R = (window_size - 1) / 2
+    len_all_area = len(all_time_series)
+
+    new_time_series = []
+    for (center_idx, time_series) in enumerate(all_time_series):
+        y_center = int(center_idx / width)
+
+        # apply mean filter to data of one point through all time
+        mean_time_series = []
+        for (time_idx, scalar) in enumerate(time_series):
+            value_list = []
+            for y in range(-mean_R, mean_R + 1):
+                for x in range(-mean_R, mean_R + 1):
+                    target_idx = int(center_idx + x + y * width)
+                    if target_idx >= 0 and target_idx < len_all_area:
+                        y_target = int(target_idx / width)
+                        y_diff = y_target - y_center
+                        # yDiff is used to handle calculation of edge correctly
+                        if y_diff == y:
+                            # remove the value within 0
+                            if all_time_series[target_idx][time_idx] > 0:
+                                value_list.append(all_time_series[target_idx][time_idx]);
+            if len(value_list) == 0:
+                mean_time_series.append(0)
+            else:
+                mean_time_series.append(sum(value_list) / len(value_list))
+        new_time_series.append(mean_time_series)
+    return np.array(new_time_series)
 
 def removeUselessTimeSeries(all_time_series, width):
     sampled_all_time_series = []
@@ -152,7 +184,8 @@ if __name__ == "__main__":
 
     # step1: generate multiple data when alpha is changed
     all_time_series_list = []
-    alpha_list = [0.08, 0.09, 0.1]
+    # alpha_list = [0.08, 0.09, 0.1]
+    alpha_list = [0.085, 0.09, 0.095]
     for alpha in alpha_list:
         f = open("./simdata/NagumoSimulation-alpha" + str(alpha) + ".json", "r")
         json_data = json.load(f)
@@ -189,20 +222,22 @@ if __name__ == "__main__":
     for (low_point, high_point) in zip(low_points, high_points):
         low_indices = [int(low_point['y'] * width + low_point['x']), int((low_point['y'] + 1) * width + low_point['x']), int((low_point['y'] + 2) * width + low_point['x'])]
         for low_idx in low_indices:
-            all_time_series[low_idx: low_idx + 3, :] = all_time_series_list[0][low_idx: low_idx + 3, :]
+            all_time_series[low_idx: low_idx + window_size, :] = all_time_series_list[0][low_idx: low_idx + window_size, :]
 
         high_indices = [int(high_point['y'] * width + high_point['x']), int((high_point['y'] + 1) * width + high_point['x']), int((high_point['y'] + 2) * width + high_point['x'])]
         for high_idx in high_indices:
-            all_time_series[high_idx: high_idx + 3, :] = all_time_series_list[2][high_idx: high_idx + 3, :]
+            all_time_series[high_idx: high_idx + window_size, :] = all_time_series_list[2][high_idx: high_idx + window_size, :]
 
-    # step3: add noise
+    # step3: add noise and apply mean filter
     noise = 0
-    all_time_series_noise = add_noise(all_time_series, 0)
+    all_time_series_noise = add_noise(all_time_series, 4)
+    all_time_series_noise = applyMeanFilter(all_time_series_noise, width)
+
 
     # step4: sampling and calculate cross-correlation
     max_lag = 30
     lag_step = 1
-    window_size = 3
+
     sampled_all_time_series, sampled_coords = removeUselessTimeSeries(all_time_series_noise, width)
 
     corr_matrix, lag_matrix = allcrosscorr.calc_all(sampled_all_time_series, max_lag, lag_step, window_size)
