@@ -182,20 +182,18 @@ if __name__ == "__main__":
     dx2, dy2 = dx*dx, dy*dy
     dt = 0.0001 # 0.0000625= (dx2 * dy2 / (2 * D * (dx2 + dy2))) / 10 when D = 4
 
-    # step1: generate multiple data when alpha is changed
-    all_time_series_list = []
-    # alpha_list = [0.08, 0.09, 0.1]
-    alpha_list = [0.085, 0.09, 0.095]
-    for alpha in alpha_list:
-        f = open("./simdata/NagumoSimulation-alpha" + str(alpha) + ".json", "r")
-        json_data = json.load(f)
-
-        all_time_series = np.array(json_data['allTimeSeries'], dtype=np.float)
-        all_time_series_list.append(all_time_series)
-
-
     # loop several times to many experimental data
-    for loop_number in range(10, 25, 1):
+    for loop_number in range(30, 40, 1):
+        # step1: generate multiple data when alpha is changed
+        all_time_series_list = []
+        # alpha_list = [0.08, 0.09, 0.1]
+        alpha_list = [0.085, 0.09, 0.095]
+        for alpha in alpha_list:
+            f = open("./simdata/NagumoSimulation-alpha" + str(alpha) + ".json", "r")
+            json_data = json.load(f)
+
+            all_time_series = np.array(json_data['allTimeSeries'], dtype=np.float)
+            all_time_series_list.append(all_time_series)
 
         # step2: select characteristic points randomly so that avoid same points
         coords_list = getCoordsList(4)
@@ -233,7 +231,10 @@ if __name__ == "__main__":
                 all_time_series[high_idx: high_idx + window_size, :] = all_time_series_list[2][high_idx: high_idx + window_size, :]
 
         # step3: add noise and apply mean filter
-        noise = 0
+        # noise = 0
+        # noise = 10
+        noise = 4
+        # noise = 3
         all_time_series_noise = add_noise(all_time_series, noise)
         all_time_series_noise = applyMeanFilter(all_time_series_noise, width)
 
