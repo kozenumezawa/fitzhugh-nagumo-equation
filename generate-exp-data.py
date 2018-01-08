@@ -234,7 +234,7 @@ if __name__ == "__main__":
 
         # step3: add noise and apply mean filter
         noise = 0
-        all_time_series_noise = add_noise(all_time_series, 0)
+        all_time_series_noise = add_noise(all_time_series, noise)
         all_time_series_noise = applyMeanFilter(all_time_series_noise, width)
 
 
