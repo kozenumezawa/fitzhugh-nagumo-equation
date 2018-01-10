@@ -30,6 +30,10 @@ def getCoordsList(n):
     while len(coords_list) < n:
         x = randomSampling()
         y = randomSampling()
+
+        # avoid area of initial value
+        if (x >= 15 and x <= 32) and y >= 42:
+            continue
         new_coords = [x, y]
         if not new_coords in coords_list:
             coords_list.append(new_coords)
