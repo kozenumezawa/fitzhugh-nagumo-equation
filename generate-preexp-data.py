@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
 # generate data for the experiment based on Fitzhugh-Nagumo Equation
-# step1: generate multiple data when alpha is changed
-# step2: select characteristic points randomly
+# step1: select characteristic points randomly
+# step2: generate multiple data when alpha is changed
 # step3: add noise
 # step4: calculate cross-correlation
 # step5: clustering
@@ -187,19 +187,8 @@ if __name__ == "__main__":
     dt = 0.0001 # 0.0000625= (dx2 * dy2 / (2 * D * (dx2 + dy2))) / 10 when D = 4
 
     # loop several times to many experimental data
-    for loop_number in range(10, 11, 1):
-        # step1: generate multiple data when alpha is changed
-        all_time_series_list = []
-        # alpha_list = [0.08, 0.09, 0.1]
-        alpha_list = [0.085, 0.09, 0.095]
-        for alpha in alpha_list:
-            f = open("./simdata/NagumoSimulation-alpha" + str(alpha) + ".json", "r")
-            json_data = json.load(f)
-
-            all_time_series = np.array(json_data['allTimeSeries'], dtype=np.float)
-            all_time_series_list.append(all_time_series)
-
-        # step2: select characteristic points randomly so that avoid same points
+    for loop_number in range(10, 20, 1):
+        # step1: select characteristic points randomly so that avoid same points
         coords_list = getCoordsList(4)
         low_points = [
             {
@@ -223,80 +212,89 @@ if __name__ == "__main__":
             }
         ]
 
-        # substitute
-        all_time_series = all_time_series_list[1]
-        for (low_point, high_point) in zip(low_points, high_points):
-            low_indices = [int(low_point['y'] * width + low_point['x']), int((low_point['y'] + 1) * width + low_point['x']), int((low_point['y'] + 2) * width + low_point['x'])]
-            for low_idx in low_indices:
-                all_time_series[low_idx: low_idx + window_size, :] = all_time_series_list[0][low_idx: low_idx + window_size, :]
+        noise_list = [0, 10, 6, 4, 3]
+        for noise in noise_list:
+            # step1: generate multiple data when alpha is changed
+            all_time_series_list = []
+            # alpha_list = [0.08, 0.09, 0.1]
+            alpha_list = [0.085, 0.09, 0.095]
+            for alpha in alpha_list:
+                f = open("./simdata/NagumoSimulation-alpha" + str(alpha) + ".json", "r")
+                json_data = json.load(f)
 
-            high_indices = [int(high_point['y'] * width + high_point['x']), int((high_point['y'] + 1) * width + high_point['x']), int((high_point['y'] + 2) * width + high_point['x'])]
-            for high_idx in high_indices:
-                all_time_series[high_idx: high_idx + window_size, :] = all_time_series_list[2][high_idx: high_idx + window_size, :]
+                all_time_series = np.array(json_data['allTimeSeries'], dtype=np.float)
+                all_time_series_list.append(all_time_series)
 
-        # step3: add noise and apply mean filter
-        # noise = 0
-        # noise = 10
-        noise = 0
-        # noise = 3
-        all_time_series_noise = add_noise(all_time_series, noise)
-        all_time_series_noise = applyMeanFilter(all_time_series_noise, width)
+            # substitute
+            all_time_series = all_time_series_list[1]
+            for (low_point, high_point) in zip(low_points, high_points):
+                low_indices = [int(low_point['y'] * width + low_point['x']), int((low_point['y'] + 1) * width + low_point['x']), int((low_point['y'] + 2) * width + low_point['x'])]
+                for low_idx in low_indices:
+                    all_time_series[low_idx: low_idx + window_size, :] = all_time_series_list[0][low_idx: low_idx + window_size, :]
+
+                high_indices = [int(high_point['y'] * width + high_point['x']), int((high_point['y'] + 1) * width + high_point['x']), int((high_point['y'] + 2) * width + high_point['x'])]
+                for high_idx in high_indices:
+                    all_time_series[high_idx: high_idx + window_size, :] = all_time_series_list[2][high_idx: high_idx + window_size, :]
+
+            # step3: add noise and apply mean filter
+            all_time_series_noise = add_noise(all_time_series, noise)
+            all_time_series_noise = applyMeanFilter(all_time_series_noise, width)
 
 
-        # step4: sampling and calculate cross-correlation
-        max_lag = 30
-        lag_step = 1
+            # step4: sampling and calculate cross-correlation
+            max_lag = 30
+            lag_step = 1
 
-        sampled_all_time_series, sampled_coords = removeUselessTimeSeries(all_time_series_noise, width)
+            sampled_all_time_series, sampled_coords = removeUselessTimeSeries(all_time_series_noise, width)
 
-        corr_matrix, lag_matrix = allcrosscorr.calc_all(sampled_all_time_series, max_lag, lag_step, window_size)
-        # f = open("./expdata/corr_list-" + str(window_size) + ".json", "r")
-        # corr_matrix = json.load(f)
-        # f = open("./expdata/lag_list-" + str(window_size) + ".json", "r")
-        # lag_matrix = json.load(f)
+            corr_matrix, lag_matrix = allcrosscorr.calc_all(sampled_all_time_series, max_lag, lag_step, window_size)
+            # f = open("./expdata/corr_list-" + str(window_size) + ".json", "r")
+            # corr_matrix = json.load(f)
+            # f = open("./expdata/lag_list-" + str(window_size) + ".json", "r")
+            # lag_matrix = json.load(f)
 
-        # step5: clustering
-        corr_matrix = np.array(corr_matrix, dtype=np.float)
-        lag_matrix = np.array(lag_matrix, dtype=np.float)
-        threshold = 0.7
+            # step5: clustering
+            corr_matrix = np.array(corr_matrix, dtype=np.float)
+            lag_matrix = np.array(lag_matrix, dtype=np.float)
+            threshold = 0.7
 
-        json_data = irm.infinite_relational_model(corr_matrix, lag_matrix, threshold, sampled_coords, window_size)
+            json_data = irm.infinite_relational_model(corr_matrix, lag_matrix, threshold, sampled_coords, window_size)
 
-        # sort
-        corr_matrix = np.array(json_data['corrMatrix'])
-        lag_matrix = np.array(json_data['lagMatrix'])
-        cluster_matrix = np.array(json_data['clusterMatrix'])
-        cluster_sampled_coords = np.array(json_data['clusterSampledCoords'])
-        n_cluster_list = np.array(json_data['nClusterList'])
-        ordering = np.array(json_data['ordering'])
+            # sort
+            corr_matrix = np.array(json_data['corrMatrix'])
+            lag_matrix = np.array(json_data['lagMatrix'])
+            cluster_matrix = np.array(json_data['clusterMatrix'])
+            cluster_sampled_coords = np.array(json_data['clusterSampledCoords'])
+            n_cluster_list = np.array(json_data['nClusterList'])
+            ordering = np.array(json_data['ordering'])
 
-        sort_result = sort(corr_matrix, lag_matrix, cluster_matrix, cluster_sampled_coords, n_cluster_list, ordering)
+            sort_result = sort(corr_matrix, lag_matrix, cluster_matrix, cluster_sampled_coords, n_cluster_list, ordering)
 
-        # step6: save json
-        saveJSON = {
-            'allTimeSeries': all_time_series_noise.tolist(), # reverse interpolate_list
-            'width': width,
-            'noise': noise,
-            'lowPoints': {
-                'alpha': alpha_list[0],
-                'points': low_points
-            },
-            'highPoints': {
-                'alpha': alpha_list[2],
-                'points': high_points
-            },
+            # step6: save json
+            saveJSON = {
+                'allTimeSeries': all_time_series_noise.tolist(), # reverse interpolate_list
+                'width': width,
+                'noise': noise,
+                'lowPoints': {
+                    'alpha': alpha_list[0],
+                    'points': low_points
+                },
+                'highPoints': {
+                    'alpha': alpha_list[2],
+                    'points': high_points
+                },
 
-            'sampledAllTimeSeries': sampled_all_time_series.tolist(),
-            'sampledCoords': sampled_coords,
+                'sampledAllTimeSeries': sampled_all_time_series.tolist(),
+                'sampledCoords': sampled_coords,
 
-            'corrMatrix': sort_result['corrMatrix'],
-            'lagMatrix': sort_result['lagMatrix'],
-            'clusterMatrix': sort_result['clusterMatrix'],
-            'clusterSampledCoords': sort_result['clusterSampledCoords'],
-            'nClusterList': sort_result['nClusterList'],
-            'ordering': sort_result['ordering'],
-        }
+                'corrMatrix': sort_result['corrMatrix'],
+                'lagMatrix': sort_result['lagMatrix'],
+                'clusterMatrix': sort_result['clusterMatrix'],
+                'clusterSampledCoords': sort_result['clusterSampledCoords'],
+                'nClusterList': sort_result['nClusterList'],
+                'ordering': sort_result['ordering'],
+            }
 
-        f = open("./preexpdata/pre_experiment_data_" + str(noise) + "_" + str(loop_number) + ".json", "w")
-        json.dump(saveJSON, f)
-        f.close()
+            f = open("./preexpdata/pre_experiment_data_" + str(noise) + "_" + str(loop_number) + ".json", "w")
+            json.dump(saveJSON, f)
+            f.close()
