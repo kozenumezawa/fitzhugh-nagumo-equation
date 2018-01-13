@@ -212,7 +212,7 @@ if __name__ == "__main__":
             }
         ]
 
-        noise_list = [0, 10, 6, 4, 3]
+        noise_list = [0, 10, 7, 4, 3]
         for noise in noise_list:
             # step1: generate multiple data when alpha is changed
             all_time_series_list = []
