@@ -297,6 +297,6 @@ if __name__ == "__main__":
             'ordering': sort_result['ordering'],
         }
 
-        f = open("./preexpdata/pre_experiment_data_" + noise + "_" + str(loop_number) + ".json", "w")
+        f = open("./preexpdata/pre_experiment_data_" + str(noise) + "_" + str(loop_number) + ".json", "w")
         json.dump(saveJSON, f)
         f.close()
